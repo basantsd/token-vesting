@@ -117,7 +117,7 @@ function VestingScheduleCard({ schedule, onRevoke, isRevoking }: VestingSchedule
       {onRevoke && (
         <div className="mt-4">
           <Button
-            variant="destructive"
+            variant="danger"
             size="sm"
             onClick={onRevoke}
             disabled={isRevoking}
