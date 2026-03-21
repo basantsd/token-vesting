@@ -7,7 +7,7 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "demo_proj
 const metadata = {
   name: "Token Vesting",
   description: "Token Vesting Dashboard",
-  url: "https://localhost:3000",
+  url: process.env.NEXT_PUBLIC_APP_URL ?? "https://localhost:3000",
   icons: [],
 };
 
