@@ -13,8 +13,7 @@ export default function VestingPage() {
 
   React.useEffect(() => {
     if (isSuccess) refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccess]);
+  }, [isSuccess, refetch]);
 
   if (!isConnected) {
     return (
@@ -55,6 +54,9 @@ export default function VestingPage() {
   const total = Number(schedule.totalAmount);
   const claimed = Number(schedule.claimedAmount);
   const claimable = Number(schedule.claimableNow);
+  const progressPct = schedule.totalAmountRaw > 0n
+    ? Number((schedule.claimedAmountRaw * 10000n) / schedule.totalAmountRaw) / 100
+    : 0;
   const now = Date.now();
   const cliffPassed = now > schedule.cliffEndsAt.getTime();
   const fullyVested = now > schedule.vestingEndsAt.getTime();
@@ -68,19 +70,19 @@ export default function VestingPage() {
         <Card>
           <CardContent>
             <p className="text-body-sm text-text-secondary mb-1">Total Allocation</p>
-            <p className="text-display-sm font-bold text-text-primary">{total.toLocaleString()} VTK</p>
+            <p className="text-display-sm font-bold text-text-primary">{total.toLocaleString("en-US")} VTK</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
             <p className="text-body-sm text-text-secondary mb-1">Already Claimed</p>
-            <p className="text-display-sm font-bold text-success">{claimed.toLocaleString()} VTK</p>
+            <p className="text-display-sm font-bold text-success">{claimed.toLocaleString("en-US")} VTK</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
             <p className="text-body-sm text-text-secondary mb-1">Available to Claim</p>
-            <p className="text-display-sm font-bold text-accent-primary">{claimable.toLocaleString()} VTK</p>
+            <p className="text-display-sm font-bold text-accent-primary">{claimable.toLocaleString("en-US")} VTK</p>
           </CardContent>
         </Card>
       </div>
@@ -91,7 +93,7 @@ export default function VestingPage() {
           <CardTitle>Vesting Progress</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Progress value={claimed} max={total} showValue />
+          <Progress value={progressPct} max={100} showValue />
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body-sm">
             <div>
@@ -129,7 +131,7 @@ export default function VestingPage() {
               ? "Confirm in wallet..."
               : isConfirming
               ? "Claiming..."
-              : `Claim ${claimable.toLocaleString()} VTK`}
+              : `Claim ${claimable.toLocaleString("en-US")} VTK`}
           </Button>
         </CardContent>
       </Card>
