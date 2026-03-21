@@ -21,7 +21,7 @@ export function useCreateVestingSchedule() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const createSchedule = (
+  const createVestingSchedule = (
     beneficiary: `0x${string}`,
     totalAmountEther: string,
     cliffDays: number,
@@ -39,7 +39,7 @@ export function useCreateVestingSchedule() {
     });
   };
 
-  return { createSchedule, isPending, isConfirming, isSuccess, error, hash };
+  return { createVestingSchedule, isPending, isConfirming, isSuccess, error, hash };
 }
 
 export function useRevokeSchedule() {
