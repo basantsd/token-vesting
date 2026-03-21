@@ -12,10 +12,10 @@ export function useIsAdmin() {
   const isAdmin =
     !!address &&
     !!owner &&
-    address.toLowerCase() === (owner as string).toLowerCase();
+    address.toLowerCase() === owner.toLowerCase();
 
   return {
     isAdmin,
-    owner: owner as `0x${string}` | undefined,
+    owner,
   };
 }
