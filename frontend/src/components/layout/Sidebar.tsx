@@ -15,10 +15,8 @@ import {
   Search,
   User,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui";
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator } from "@/components/ui";
-import { formatAddress } from "@/lib/utils";
+import { ConnectWallet } from "@/components/ConnectWallet";
 
 /* Logo mark — clean V + lock pin */
 function LogoMark({ size = 28 }: { size?: number }) {
@@ -112,55 +110,7 @@ export function Sidebar({ connected, address, onConnect, onDisconnect }: Sidebar
 
         {/* Wallet */}
         <div style={{ borderTop: "1px solid var(--color-border-1)", padding: "1rem" }}>
-          {connected ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "0.625rem", borderRadius: "0.5rem", background: "var(--color-bg-card)", border: "1px solid var(--color-border-1)" }}>
-                <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "var(--color-emerald-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Wallet size={14} style={{ color: "var(--color-emerald)" }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.625rem", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--color-text-3)", fontWeight: 600 }}>Connected</div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.8125rem", color: "var(--color-text-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {formatAddress(address)}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={onDisconnect}
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0.625rem", borderRadius: "0.5rem", fontSize: "0.8125rem", color: "var(--color-text-3)", fontWeight: 500, transition: "color 150ms", background: "none", border: "none", cursor: "pointer" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-red)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-3)")}
-              >
-                <LogOut size={14} />
-                Disconnect
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={onConnect}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem",
-                height: "2.375rem",
-                borderRadius: "0.5rem",
-                background: "var(--color-emerald)",
-                color: "#080D13",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                cursor: "pointer",
-                border: "none",
-                transition: "background 150ms",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-emerald-dark)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-emerald)")}
-            >
-              <Wallet size={15} />
-              Connect Wallet
-            </button>
-          )}
+          <ConnectWallet />
         </div>
       </div>
     </aside>
