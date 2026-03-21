@@ -188,9 +188,9 @@ export function VestingScheduleList() {
             cliffTime: schedule.cliffEndsAt.getTime(),
             status: schedule.isRevoked
               ? "revoked"
-              : (Number(schedule.claimedAmount) >= Number(schedule.totalAmount) && Number(schedule.totalAmount) > 0)
+              : (schedule.claimedAmountRaw >= schedule.totalAmountRaw && schedule.totalAmountRaw > 0n)
                 ? "completed"
-                : Number(schedule.claimableNow) > 0
+                : schedule.claimableNowRaw > 0n
                   ? "active"
                   : "pending",
           }}
