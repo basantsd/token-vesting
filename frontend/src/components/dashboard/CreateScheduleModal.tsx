@@ -16,8 +16,15 @@ export function CreateScheduleModal({ open, onClose }: CreateScheduleModalProps)
   const { createVestingSchedule, isPending, isConfirming, isSuccess, error } = useCreateVestingSchedule();
 
   React.useEffect(() => {
-    if (isSuccess) onClose();
-  }, [isSuccess, onClose]);
+    if (isSuccess) {
+      setBeneficiary("");
+      setAmount("");
+      setCliffDays("180");
+      setVestingDays("365");
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuccess]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
