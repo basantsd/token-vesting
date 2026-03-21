@@ -4,9 +4,11 @@ import { StatsGrid, VestingScheduleList, RecentActivity } from "@/components/das
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@/components/ui";
 import { Plus, FileText, Wallet } from "lucide-react";
 import { CreateScheduleModal } from "@/components/dashboard/CreateScheduleModal";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export default function DashboardPage() {
   const [modalOpen, setModalOpen] = React.useState(false);
+  const { isAdmin } = useIsAdmin();
 
   return (
     <div className="space-y-8">
@@ -24,10 +26,12 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 mr-2" />
             Export Report
           </Button>
-          <Button onClick={() => setModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Schedule
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => setModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Schedule
+            </Button>
+          )}
         </div>
       </div>
 
@@ -68,37 +72,41 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-success" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Button variant="secondary" className="w-full justify-start">
-                <Plus className="h-4 w-4 mr-3" />
-                Add Beneficiary
-              </Button>
-              <Button variant="secondary" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-3" />
-                Create Vesting Schedule
-              </Button>
-              <Button variant="secondary" className="w-full justify-start">
-                <Wallet className="h-4 w-4 mr-3" />
-                Submit Treasury Proposal
-              </Button>
-              <Button variant="secondary" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-3" />
-                View All Transactions
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-success" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <Button variant="secondary" className="w-full justify-start">
+                  <Plus className="h-4 w-4 mr-3" />
+                  Add Beneficiary
+                </Button>
+                <Button variant="secondary" className="w-full justify-start">
+                  <FileText className="h-4 w-4 mr-3" />
+                  Create Vesting Schedule
+                </Button>
+                <Button variant="secondary" className="w-full justify-start">
+                  <Wallet className="h-4 w-4 mr-3" />
+                  Submit Treasury Proposal
+                </Button>
+                <Button variant="secondary" className="w-full justify-start">
+                  <FileText className="h-4 w-4 mr-3" />
+                  View All Transactions
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <CreateScheduleModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      {isAdmin && (
+        <CreateScheduleModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      )}
     </div>
   );
 }
