@@ -7,7 +7,7 @@ export function useVestingSchedule(beneficiary?: `0x${string}`) {
   const { data, isLoading, refetch } = useReadContract({
     ...vestingVaultContract,
     functionName: "getScheduleDetails",
-    args: beneficiary ? [beneficiary] : undefined,
+    args: [beneficiary as `0x${string}`],
     query: { enabled: !!beneficiary },
   });
 
@@ -28,6 +28,7 @@ export function useVestingSchedule(beneficiary?: `0x${string}`) {
       totalAmountRaw: totalAmount,
       claimedAmountRaw: claimedAmount,
       claimableNowRaw: claimableNow,
+      vestedSoFarRaw: vestedSoFar,
     },
     isLoading,
     refetch,
