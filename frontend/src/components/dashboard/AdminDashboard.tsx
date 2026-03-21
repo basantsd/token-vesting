@@ -186,7 +186,13 @@ export function VestingScheduleList() {
             startTime: 0,
             endTime: schedule.vestingEndsAt.getTime(),
             cliffTime: schedule.cliffEndsAt.getTime(),
-            status: schedule.isRevoked ? "revoked" : Number(schedule.claimableNow) > 0 ? "active" : "pending",
+            status: schedule.isRevoked
+              ? "revoked"
+              : (Number(schedule.claimedAmount) >= Number(schedule.totalAmount) && Number(schedule.totalAmount) > 0)
+                ? "completed"
+                : Number(schedule.claimableNow) > 0
+                  ? "active"
+                  : "pending",
           }}
           onRevoke={() => revokeSchedule(lookupAddress)}
           isRevoking={isRevoking}
