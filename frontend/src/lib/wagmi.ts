@@ -1,5 +1,4 @@
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
-import { createWeb3Modal } from "@web3modal/wagmi/react";
 import { sepolia } from "viem/chains";
 import { http } from "wagmi";
 
@@ -21,4 +20,4 @@ export const wagmiConfig = defaultWagmiConfig({
   },
 });
 
-createWeb3Modal({ wagmiConfig, projectId });
+export { projectId };
