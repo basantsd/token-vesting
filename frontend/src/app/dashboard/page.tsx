@@ -1,8 +1,13 @@
+"use client";
+import * as React from "react";
 import { StatsGrid, VestingScheduleList, RecentActivity } from "@/components/dashboard/AdminDashboard";
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@/components/ui";
 import { Plus, FileText, Wallet } from "lucide-react";
+import { CreateScheduleModal } from "@/components/dashboard/CreateScheduleModal";
 
 export default function DashboardPage() {
+  const [modalOpen, setModalOpen] = React.useState(false);
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -19,7 +24,7 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 mr-2" />
             Export Report
           </Button>
-          <Button>
+          <Button onClick={() => setModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Schedule
           </Button>
@@ -92,6 +97,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <CreateScheduleModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   );
 }
