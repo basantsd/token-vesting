@@ -58,7 +58,7 @@ interface VestingSchedule {
   startTime: number;
   endTime: number;
   cliffTime: number;
-  status: "active" | "completed" | "pending";
+  status: "active" | "completed" | "pending" | "revoked";
 }
 
 interface VestingScheduleCardProps {
@@ -72,6 +72,7 @@ function VestingScheduleCard({ schedule, onRevoke, isRevoking }: VestingSchedule
     active: { bg: "bg-success/10", text: "text-success", label: "Active" },
     completed: { bg: "bg-info/10", text: "text-info", label: "Completed" },
     pending: { bg: "bg-warning/10", text: "text-warning", label: "Pending" },
+    revoked: { bg: "bg-error/10", text: "text-error", label: "Revoked" },
   };
 
   const status = statusColors[schedule.status];
@@ -88,7 +89,7 @@ function VestingScheduleCard({ schedule, onRevoke, isRevoking }: VestingSchedule
           </p>
         </div>
         <Badge
-          variant={schedule.status === "active" ? "success" : schedule.status === "completed" ? "info" : "warning"}
+          variant={schedule.status === "active" ? "success" : schedule.status === "completed" ? "info" : schedule.status === "revoked" ? "error" : "warning"}
           dot
         >
           {status.label}
@@ -104,8 +105,8 @@ function VestingScheduleCard({ schedule, onRevoke, isRevoking }: VestingSchedule
 
       <div className="grid grid-cols-2 gap-4 text-body-sm">
         <div>
-          <p className="text-text-muted">Start Date</p>
-          <p className="text-text-primary">{formatDateTime(schedule.startTime)}</p>
+          <p className="text-text-muted">Cliff End</p>
+          <p className="text-text-primary">{formatDateTime(schedule.cliffTime)}</p>
         </div>
         <div>
           <p className="text-text-muted">End Date</p>
@@ -185,7 +186,7 @@ export function VestingScheduleList() {
             startTime: 0,
             endTime: schedule.vestingEndsAt.getTime(),
             cliffTime: schedule.cliffEndsAt.getTime(),
-            status: schedule.isRevoked ? "completed" : Number(schedule.claimableNow) > 0 ? "active" : "pending",
+            status: schedule.isRevoked ? "revoked" : Number(schedule.claimableNow) > 0 ? "active" : "pending",
           }}
           onRevoke={() => revokeSchedule(lookupAddress)}
           isRevoking={isRevoking}
