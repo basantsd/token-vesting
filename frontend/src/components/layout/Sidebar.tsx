@@ -37,14 +37,7 @@ const navigation = [
   { name: "Settings",  href: "/settings",  icon: Settings },
 ];
 
-interface SidebarProps {
-  connected?: boolean;
-  address?: string;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-}
-
-export function Sidebar({ connected, address, onConnect, onDisconnect }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
 
   return (
@@ -239,20 +232,12 @@ export function Header() {
 
 export function MainLayout({
   children,
-  connected,
-  address,
-  onConnect,
-  onDisconnect,
 }: {
   children: React.ReactNode;
-  connected?: boolean;
-  address?: string;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
 }) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg-base)" }}>
-      <Sidebar connected={connected} address={address} onConnect={onConnect} onDisconnect={onDisconnect} />
+      <Sidebar />
       <Header />
       <main style={{ marginLeft: "16rem", paddingTop: "4rem", minHeight: "100vh" }}>
         <div style={{ padding: "1.75rem" }}>{children}</div>

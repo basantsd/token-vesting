@@ -8,15 +8,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <MainLayout
-      connected={false}
-      onConnect={() => {
-        console.log("Connect wallet");
-      }}
-      onDisconnect={() => {
-        console.log("Disconnect wallet");
-      }}
-    >
+    <MainLayout>
       {children}
     </MainLayout>
   );
