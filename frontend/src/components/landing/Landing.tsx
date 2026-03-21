@@ -271,7 +271,7 @@ export function HeroSection() {
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "60%", height: "50%", background: "radial-gradient(ellipse at center top, rgba(16,185,129,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
 
       <div className="relative mx-auto max-w-7xl px-6">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "3rem", alignItems: "center" }}>
+        <div style={{  display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", alignItems: "center", justifyItems:"center" }}>
           {/* Left column */}
           <div style={{ maxWidth: "640px" }}>
             {/* Eyebrow */}
@@ -332,12 +332,14 @@ export function HeroSection() {
                   <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)", marginTop: "2px", fontWeight: 500 }}>{s.label}</div>
                 </div>
               ))}
+              
             </div>
           </div>
 
           {/* Right column — dashboard preview */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <div>
             <DashboardPreview />
+            
           </div>
         </div>
       </div>
