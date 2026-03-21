@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui";
+import Providers from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "TokenVest — Enterprise Token Vesting & Treasury",
@@ -24,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <Providers>
+          <ToastProvider>{children}</ToastProvider>
+        </Providers>
       </body>
     </html>
   );
