@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui";
-import Providers from "@/components/Providers";
+import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "TokenVest — Enterprise Token Vesting & Treasury",
