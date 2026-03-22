@@ -1,14 +1,18 @@
 "use client";
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { StatsGrid, VestingScheduleList, RecentActivity } from "@/components/dashboard/AdminDashboard";
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@/components/ui";
 import { Plus, FileText, Wallet } from "lucide-react";
 import { CreateScheduleModal } from "@/components/dashboard/CreateScheduleModal";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useVaultStats } from "@/hooks/useVestingSchedule";
 
 export default function DashboardPage() {
   const [modalOpen, setModalOpen] = React.useState(false);
   const { isAdmin } = useIsAdmin();
+  const { stats, isLoading } = useVaultStats();
+  const router = useRouter();
 
   return (
     <div className="space-y-8">
@@ -22,10 +26,6 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary">
-            <FileText className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
           {isAdmin && (
             <Button onClick={() => setModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -51,22 +51,30 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Wallet className="h-5 w-5 text-accent-primary" />
-              Treasury Overview
+              Vault Overview
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-3 border-b border-border-primary">
-                <span className="text-body-sm text-text-secondary">Treasury Balance</span>
-                <span className="text-body-lg font-semibold text-text-primary">1,250,000 TVT</span>
+                <span className="text-body-sm text-text-secondary">Vault Balance</span>
+                <span className="text-body-lg font-semibold text-text-primary">
+                  {isLoading ? "..." : `${Number(stats?.vaultBalance ?? 0).toLocaleString()} VTK`}
+                </span>
               </div>
               <div className="flex items-center justify-between py-3 border-b border-border-primary">
-                <span className="text-body-sm text-text-secondary">Pending Proposals</span>
-                <span className="text-body-lg font-semibold text-accent-primary">3</span>
+                <span className="text-body-sm text-text-secondary">Total Locked</span>
+                <span className="text-body-lg font-semibold text-accent-primary">
+                  {isLoading ? "..." : `${Number(stats?.totalLockedTokens ?? 0).toLocaleString()} VTK`}
+                </span>
               </div>
               <div className="flex items-center justify-between py-3">
-                <span className="text-body-sm text-text-secondary">Active Signers</span>
-                <span className="text-body-lg font-semibold text-text-primary">5 of 7</span>
+                <span className="text-body-sm text-text-secondary">Owner</span>
+                <span className="text-body-sm font-mono text-text-primary">
+                  {isLoading || !stats?.owner
+                    ? "..."
+                    : `${stats.owner.slice(0, 6)}...${stats.owner.slice(-4)}`}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -82,21 +90,29 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button variant="secondary" className="w-full justify-start">
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start"
+                  onClick={() => setModalOpen(true)}
+                >
                   <Plus className="h-4 w-4 mr-3" />
-                  Add Beneficiary
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <FileText className="h-4 w-4 mr-3" />
                   Create Vesting Schedule
                 </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <Wallet className="h-4 w-4 mr-3" />
-                  Submit Treasury Proposal
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start"
+                  onClick={() => router.push("/vesting")}
+                >
                   <FileText className="h-4 w-4 mr-3" />
-                  View All Transactions
+                  View My Vesting
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start"
+                  onClick={() => router.push("/settings")}
+                >
+                  <Wallet className="h-4 w-4 mr-3" />
+                  Contract Settings
                 </Button>
               </div>
             </CardContent>

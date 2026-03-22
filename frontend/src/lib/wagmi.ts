@@ -1,5 +1,5 @@
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
-import { sepolia } from "viem/chains";
+import { mainnet, sepolia } from "viem/chains";
 import { http } from "wagmi";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "demo_project_id";
@@ -12,11 +12,13 @@ const metadata = {
 };
 
 export const wagmiConfig = defaultWagmiConfig({
-  chains: [sepolia],
+  // mainnet is required by Web3Modal for ENS name resolution (syncProfile)
+  chains: [sepolia, mainnet],
   projectId,
   metadata,
   transports: {
     [sepolia.id]: http(),
+    [mainnet.id]: http(),
   },
 });
 

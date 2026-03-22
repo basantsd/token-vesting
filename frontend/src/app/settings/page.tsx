@@ -7,60 +7,47 @@ import {
   CardTitle,
   CardContent,
   Button,
-  Input,
   Badge,
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-  Modal,
-  ModalHeader,
-  ModalTitle,
-  ModalDescription,
-  ModalBody,
-  ModalFooter,
   useToast,
 } from "@/components/ui";
 import {
   Settings,
   Shield,
   Bell,
-  Key,
   Globe,
   Wallet,
   Coins,
-  Clock,
   Save,
-  RefreshCw,
   Copy,
   ExternalLink,
   CheckCircle,
-  AlertTriangle,
   Users,
-  Plus,
-  Trash2,
 } from "lucide-react";
+import { useVaultStats } from "@/hooks/useVestingSchedule";
+import {
+  VESTING_VAULT_ADDRESS,
+  VESTING_TOKEN_ADDRESS,
+} from "@/lib/contracts";
+
+const SEPOLIA_EXPLORER = "https://sepolia.etherscan.io";
 
 const contractAddresses = [
-  { name: "Token Contract", address: "0x1234...5678", network: "Ethereum Mainnet", verified: true },
-  { name: "Vesting Engine", address: "0x2345...6789", network: "Ethereum Mainnet", verified: true },
-  { name: "Treasury Contract", address: "0x3456...7890", network: "Ethereum Mainnet", verified: true },
-];
-
-const accessControls = [
-  { role: "DEFAULT_ADMIN", members: ["0x7a...3d2f", "0x8b...4e3a", "0x9c...5f4b"], description: "Can grant/revoke other roles" },
-  { role: "MINTER", members: ["0x7a...3d2f", "0x8b...4e3a"], description: "Can mint new tokens" },
-  { role: "BURNER", members: ["0x9c...5f4b", "0x1d...6g5c"], description: "Can burn tokens" },
-  { role: "PAUSER", members: ["0x7a...3d2f", "0x2e...7h6d"], description: "Can pause transfers" },
-  { role: "VESTING_ADMIN", members: ["0x7a...3d2f", "0x8b...4e3a", "0x9c...5f4b", "0x1d...6g5c"], description: "Can create/modify vesting schedules" },
-];
-
-const vestingParams = [
-  { name: "Min Cliff Period", value: "0 days", description: "Minimum cliff duration for new schedules" },
-  { name: "Max Cliff Period", value: "24 months", description: "Maximum cliff duration allowed" },
-  { name: "Min Vesting Period", value: "6 months", description: "Minimum total vesting duration" },
-  { name: "Max Vesting Period", value: "60 months", description: "Maximum total vesting duration" },
-  { name: "Early Exit Penalty", value: "25%", description: "Penalty for early token claim" },
+  {
+    name: "VestingToken (VTK)",
+    address: VESTING_TOKEN_ADDRESS,
+    network: "Sepolia Testnet",
+    verified: true,
+  },
+  {
+    name: "VestingVault",
+    address: VESTING_VAULT_ADDRESS,
+    network: "Sepolia Testnet",
+    verified: true,
+  },
 ];
 
 const initialNotificationSettings = [
@@ -109,14 +96,8 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 
 export default function SettingsPage() {
   const { add: toast } = useToast();
+  const { stats, isLoading: statsLoading } = useVaultStats();
   const [notifications, setNotifications] = React.useState(initialNotificationSettings);
-  const [accessModalOpen, setAccessModalOpen] = React.useState(false);
-  const [activeRole, setActiveRole] = React.useState<(typeof accessControls)[0] | null>(null);
-  const [newMemberAddress, setNewMemberAddress] = React.useState("");
-
-  function handleSave() {
-    toast({ type: "success", title: "Settings saved", message: "Your changes have been saved successfully." });
-  }
 
   function handleCopyAddress(address: string) {
     navigator.clipboard.writeText(address).catch(() => {});
@@ -129,153 +110,102 @@ export default function SettingsPage() {
     );
   }
 
-  function handleManageRole(role: (typeof accessControls)[0]) {
-    setActiveRole({ ...role });
-    setAccessModalOpen(true);
-  }
-
-  function handleAddRoleMember() {
-    if (!newMemberAddress) {
-      toast({ type: "error", title: "Missing address", message: "Please enter a wallet address." });
-      return;
-    }
-    setActiveRole((r) => r ? { ...r, members: [...r.members, newMemberAddress] } : r);
-    toast({ type: "success", title: "Member added", message: `${newMemberAddress} added to ${activeRole?.role}` });
-    setNewMemberAddress("");
-  }
-
-  function handleRemoveRoleMember(addr: string) {
-    setActiveRole((r) => r ? { ...r, members: r.members.filter((m) => m !== addr) } : r);
-    toast({ type: "warning", title: "Member removed", message: `${addr} removed from role.` });
-  }
-
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-display-md font-display font-bold text-text-primary">Settings</h1>
-          <p className="text-body-lg text-text-secondary mt-1">
-            Configure platform parameters and preferences
-          </p>
-        </div>
-        <Button onClick={handleSave}>
-          <Save className="h-4 w-4 mr-2" />
-          Save Changes
-        </Button>
+      <div>
+        <h1 className="text-display-md font-display font-bold text-text-primary">Settings</h1>
+        <p className="text-body-lg text-text-secondary mt-1">
+          Contract info and notification preferences
+        </p>
       </div>
 
       <Tabs defaultValue="contracts" className="space-y-6">
         <TabsList>
           <TabsTrigger value="contracts">Contracts</TabsTrigger>
           <TabsTrigger value="access">Access Control</TabsTrigger>
-          <TabsTrigger value="vesting">Vesting Params</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
 
         {/* Contracts */}
         <TabsContent value="contracts">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Coins className="h-5 w-5 text-accent-primary" />
-                  Contract Addresses
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {contractAddresses.map((contract, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-lg bg-background-tertiary border border-border-primary"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-body-md font-semibold text-text-primary">
-                          {contract.name}
-                        </span>
-                        {contract.verified ? (
-                          <Badge variant="success">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="warning">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            Unverified
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <code className="text-body-sm font-mono text-text-secondary">
-                          {contract.address}
-                        </code>
-                        <button
-                          onClick={() => handleCopyAddress(contract.address)}
-                          style={{
-                            padding: "0.25rem",
-                            borderRadius: "4px",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            color: "var(--color-text-3)",
-                            transition: "color 150ms",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-emerald)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-3)")}
-                          title="Copy address"
-                        >
-                          <Copy size={14} />
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2 text-body-xs text-text-muted">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Coins className="h-5 w-5 text-accent-primary" />
+                Deployed Contracts — Sepolia Testnet
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {contractAddresses.map((contract, index) => (
+                  <div
+                    key={index}
+                    className="p-4 rounded-lg bg-background-tertiary border border-border-primary"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-body-md font-semibold text-text-primary">
+                        {contract.name}
+                      </span>
+                      <Badge variant="success">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <code className="text-body-sm font-mono text-text-secondary break-all">
+                        {contract.address}
+                      </code>
+                      <button
+                        onClick={() => handleCopyAddress(contract.address)}
+                        style={{
+                          padding: "0.25rem",
+                          borderRadius: "4px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--color-text-3)",
+                          transition: "color 150ms",
+                          flexShrink: 0,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-emerald)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-3)")}
+                        title="Copy address"
+                      >
+                        <Copy size={14} />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-body-xs text-text-muted">
                         <Globe className="h-3 w-3" />
                         {contract.network}
                       </div>
+                      <a
+                        href={`${SEPOLIA_EXPLORER}/address/${contract.address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                          fontSize: "0.75rem",
+                          color: "var(--color-emerald)",
+                          textDecoration: "none",
+                          transition: "opacity 150ms",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.75")}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                      >
+                        <ExternalLink size={12} />
+                        View on Etherscan
+                      </a>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <RefreshCw className="h-5 w-5 text-info" />
-                  Upgrade Contracts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-background-tertiary border border-border-primary">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-body-md font-semibold text-text-primary">Token Contract</span>
-                      <Badge variant="success">Latest</Badge>
-                    </div>
-                    <p className="text-body-sm text-text-secondary mb-3">Version 1.2.0 deployed</p>
-                    <Button variant="secondary" size="sm">
-                      <ExternalLink className="h-3 w-3 mr-2" />
-                      View on Etherscan
-                    </Button>
                   </div>
-                  <div className="p-4 rounded-lg bg-background-tertiary border border-border-primary">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-body-md font-semibold text-text-primary">Vesting Engine</span>
-                      <Badge variant="warning">Upgrade Available</Badge>
-                    </div>
-                    <p className="text-body-sm text-text-secondary mb-3">
-                      Version 1.1.5 — v1.2.0 available
-                    </p>
-                    <Button size="sm">
-                      <RefreshCw className="h-3 w-3 mr-2" />
-                      Upgrade to v1.2.0
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Access Control */}
@@ -284,124 +214,56 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-accent-primary" />
-                Role-Based Access Control
+                Contract Ownership
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border-primary">
-                      <th className="text-left py-4 px-4 text-body-sm font-semibold text-text-secondary">Role</th>
-                      <th className="text-left py-4 px-4 text-body-sm font-semibold text-text-secondary">Members</th>
-                      <th className="text-left py-4 px-4 text-body-sm font-semibold text-text-secondary">Description</th>
-                      <th className="text-right py-4 px-4 text-body-sm font-semibold text-text-secondary">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {accessControls.map((role, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-border-primary hover:bg-background-tertiary/50 transition-colors"
+              <div className="space-y-4">
+                <p className="text-body-sm text-text-secondary">
+                  VestingVault uses <strong>Ownable</strong> — a single owner address controls admin actions
+                  (create/revoke schedules). Ownership can be transferred via the contract directly.
+                </p>
+                <div className="p-4 rounded-lg bg-background-tertiary border border-border-primary">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-accent-primary" />
+                      <span className="text-body-md font-semibold text-text-primary">Contract Owner</span>
+                    </div>
+                    <Badge variant="success">Active</Badge>
+                  </div>
+                  {statsLoading ? (
+                    <p className="text-body-sm text-text-muted font-mono">Loading...</p>
+                  ) : stats?.owner ? (
+                    <div className="flex items-center gap-2">
+                      <code className="text-body-sm font-mono text-text-secondary break-all">
+                        {stats.owner}
+                      </code>
+                      <button
+                        onClick={() => handleCopyAddress(stats.owner!)}
+                        style={{
+                          padding: "0.25rem",
+                          borderRadius: "4px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--color-text-3)",
+                          transition: "color 150ms",
+                          flexShrink: 0,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-emerald)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-3)")}
+                        title="Copy address"
                       >
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2">
-                            <Key className="h-4 w-4 text-accent-primary" />
-                            <span className="text-body-md font-semibold text-text-primary">{role.role}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <Badge variant="default">{role.members.length} members</Badge>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className="text-body-sm text-text-secondary">{role.description}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleManageRole(role)}
-                          >
-                            Manage
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        <Copy size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-body-sm text-text-muted">Connect wallet to view</p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Vesting Params */}
-        <TabsContent value="vesting">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-accent-primary" />
-                  Vesting Parameters
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {vestingParams.map((param, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-background-tertiary transition-colors"
-                    >
-                      <div>
-                        <p className="text-body-sm font-semibold text-text-primary">{param.name}</p>
-                        <p className="text-body-xs text-text-muted">{param.description}</p>
-                      </div>
-                      <Input defaultValue={param.value} className="w-32 text-right" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-info" />
-                  Global Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-background-tertiary border border-border-primary">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-body-md font-semibold text-text-primary">Revocable Vesting</span>
-                      <Badge variant="success">Enabled</Badge>
-                    </div>
-                    <p className="text-body-sm text-text-secondary">
-                      Allow administrators to revoke vesting schedules
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-background-tertiary border border-border-primary">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-body-md font-semibold text-text-primary">Transferable Claims</span>
-                      <Badge variant="warning">Disabled</Badge>
-                    </div>
-                    <p className="text-body-sm text-text-secondary">
-                      Allow vesting beneficiaries to transfer their claims
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-background-tertiary border border-border-primary">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-body-md font-semibold text-text-primary">Emergency Pause</span>
-                      <Badge variant="success">Enabled</Badge>
-                    </div>
-                    <p className="text-body-sm text-text-secondary">
-                      Allow pausers to emergency pause all transfers
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
 
         {/* Notifications */}
@@ -531,120 +393,6 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Access Control Manage Modal */}
-      <Modal open={accessModalOpen} onClose={() => setAccessModalOpen(false)} size="md">
-        <ModalHeader>
-          <ModalTitle>Manage Role: {activeRole?.role}</ModalTitle>
-          <ModalDescription>{activeRole?.description}</ModalDescription>
-        </ModalHeader>
-        <ModalBody>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div>
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  color: "var(--color-text-2)",
-                  marginBottom: "0.75rem",
-                }}
-              >
-                Current Members ({activeRole?.members.length ?? 0})
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                {activeRole?.members.map((addr, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "0.625rem 0.875rem",
-                      borderRadius: "0.5rem",
-                      background: "var(--color-bg-elevated)",
-                      border: "1px solid var(--color-border-1)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "0.875rem",
-                        color: "var(--color-text-1)",
-                      }}
-                    >
-                      {addr}
-                    </span>
-                    <button
-                      onClick={() => handleRemoveRoleMember(addr)}
-                      style={{
-                        padding: "0.25rem",
-                        borderRadius: "4px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--color-text-3)",
-                        transition: "color 150ms",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-red)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-3)")}
-                      title="Remove member"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderTop: "1px solid var(--color-border-1)",
-                paddingTop: "1rem",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  color: "var(--color-text-2)",
-                  marginBottom: "0.625rem",
-                }}
-              >
-                Add Member
-              </p>
-              <div style={{ display: "flex", gap: "0.625rem" }}>
-                <input
-                  type="text"
-                  placeholder="0x wallet address..."
-                  value={newMemberAddress}
-                  onChange={(e) => setNewMemberAddress(e.target.value)}
-                  style={{
-                    flex: 1,
-                    height: "2.5rem",
-                    padding: "0 0.875rem",
-                    borderRadius: "0.5rem",
-                    border: "1px solid var(--color-border-1)",
-                    background: "var(--color-bg-elevated)",
-                    fontSize: "0.875rem",
-                    color: "var(--color-text-1)",
-                    outline: "none",
-                    fontFamily: "var(--font-mono)",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-emerald)")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border-1)")}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddRoleMember()}
-                />
-                <Button onClick={handleAddRoleMember}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              </div>
-            </div>
-          </div>
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={() => setAccessModalOpen(false)}>Done</Button>
-        </ModalFooter>
-      </Modal>
     </div>
   );
 }

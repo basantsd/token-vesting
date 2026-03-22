@@ -1,22 +1,20 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "next/link"; // used in nav items
+import { usePathname, useRouter } from "next/navigation";
+import { useAccount, useDisconnect } from "wagmi";
 import {
   LayoutDashboard,
-  Users,
-  Wallet,
   Settings,
   FileText,
   LogOut,
   ChevronDown,
-  Bell,
-  Search,
   User,
 } from "lucide-react";
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator } from "@/components/ui";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 /* Logo mark — clean V + lock pin */
 function LogoMark({ size = 28 }: { size?: number }) {
@@ -29,16 +27,17 @@ function LogoMark({ size = 28 }: { size?: number }) {
   );
 }
 
+// Treasury, Team, Settings pages use mock data — hidden until contract integration is added
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Vesting",   href: "/vesting",   icon: FileText },
-  { name: "Treasury",  href: "/treasury",  icon: Wallet },
-  { name: "Team",      href: "/team",      icon: Users },
-  { name: "Settings",  href: "/settings",  icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requiresWallet: false },
+  { name: "Vesting",   href: "/vesting",   icon: FileText,        requiresWallet: true  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { isConnected } = useAccount();
+
+  const visibleNav = navigation.filter((item) => !item.requiresWallet || isConnected);
 
   return (
     <aside
@@ -69,7 +68,7 @@ export function Sidebar() {
               Navigation
             </div>
             <div className="space-y-1">
-              {navigation.map((item) => {
+              {visibleNav.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link
@@ -111,73 +110,27 @@ export function Sidebar() {
 }
 
 export function Header() {
-  const [notifCount] = React.useState(3);
+  const { address, isConnected } = useAccount();
+  const { isAdmin } = useIsAdmin();
+  const router = useRouter();
+  const { disconnect } = useDisconnect();
+
+  const displayAddress = address
+    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+    : "Not connected";
+
+  const displayRole = !isConnected ? "Wallet not connected" : isAdmin ? "Admin" : "Member";
 
   return (
     <header
       className="fixed right-0 top-0 z-30 h-16 w-[calc(100%-16rem)]"
       style={{ background: "rgba(8,13,19,0.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--color-border-1)" }}
     >
-      <div className="flex h-full items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search
-              size={15}
-              style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-3)" }}
-            />
-            <input
-              type="text"
-              placeholder="Search..."
-              style={{
-                height: "2.125rem",
-                width: "220px",
-                borderRadius: "0.5rem",
-                border: "1px solid var(--color-border-1)",
-                background: "var(--color-bg-card)",
-                paddingLeft: "2.25rem",
-                paddingRight: "1rem",
-                fontSize: "0.875rem",
-                color: "var(--color-text-1)",
-                outline: "none",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-emerald)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border-1)")}
-            />
-          </div>
-        </div>
+      <div className="flex h-full items-center justify-end px-6">
+        {/* Search bar removed — no backend integration */}
+        {/* Notification bell removed — no on-chain notification system */}
 
         <div className="flex items-center gap-2">
-          <button
-            style={{ position: "relative", padding: "0.375rem", borderRadius: "0.5rem", color: "var(--color-text-2)", background: "none", border: "none", cursor: "pointer", transition: "color 150ms" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "var(--color-text-1)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "var(--color-text-2)")}
-          >
-            <Bell size={18} />
-            {notifCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "2px",
-                  right: "2px",
-                  minWidth: "16px",
-                  height: "16px",
-                  borderRadius: "8px",
-                  background: "var(--color-emerald)",
-                  border: "1.5px solid var(--color-bg-base)",
-                  fontSize: "0.625rem",
-                  fontWeight: 700,
-                  color: "#080D13",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "0 3px",
-                }}
-              >
-                {notifCount}
-              </span>
-            )}
-          </button>
-
           <Dropdown>
             <DropdownTrigger asChild>
               <button
@@ -200,7 +153,10 @@ export function Header() {
                     width: "28px",
                     height: "28px",
                     borderRadius: "50%",
-                    background: "linear-gradient(135deg, var(--color-emerald), var(--color-emerald-dark))",
+                    background: isConnected
+                      ? "linear-gradient(135deg, var(--color-emerald), var(--color-emerald-dark))"
+                      : "var(--color-bg-card)",
+                    border: isConnected ? "none" : "1px solid var(--color-border-1)",
                   }}
                 />
                 <ChevronDown size={14} style={{ color: "var(--color-text-3)" }} />
@@ -208,20 +164,26 @@ export function Header() {
             </DropdownTrigger>
             <DropdownContent align="end">
               <div style={{ padding: "0.625rem 0.75rem 0.5rem" }}>
-                <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-1)" }}>Admin</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>admin@tokenvest.io</div>
+                <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-1)", fontFamily: "monospace" }}>
+                  {displayAddress}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>{displayRole}</div>
               </div>
               <DropdownSeparator />
-              <DropdownItem icon={<User size={14} />}>
-                <Link href="/settings" style={{ color: "inherit", textDecoration: "none" }}>Profile</Link>
+              <DropdownItem icon={<User size={14} />} onClick={() => router.push("/settings")}>
+                Profile
               </DropdownItem>
-              <DropdownItem icon={<Settings size={14} />}>
-                <Link href="/settings" style={{ color: "inherit", textDecoration: "none" }}>Settings</Link>
+              <DropdownItem icon={<Settings size={14} />} onClick={() => router.push("/settings")}>
+                Settings
               </DropdownItem>
-              <DropdownSeparator />
-              <DropdownItem icon={<LogOut size={14} />} danger>
-                Sign Out
-              </DropdownItem>
+              {isConnected && (
+                <>
+                  <DropdownSeparator />
+                  <DropdownItem icon={<LogOut size={14} />} danger onClick={() => disconnect()}>
+                    Disconnect
+                  </DropdownItem>
+                </>
+              )}
             </DropdownContent>
           </Dropdown>
         </div>
