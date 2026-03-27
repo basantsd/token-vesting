@@ -14,9 +14,9 @@ contract VestingToken is ERC20, Ownable, Pausable {
     error MaxSupplyExceeded(uint256 requested, uint256 available);
 
     // EVENTS
-    event TokensMinted(address indexed to, uint256 amount);
-    event TokensBurned(address indexed from, uint256 amount);
-    event MaxSupplyUpdated(uint256 newMaxSupply);
+    event TokensMinted(address indexed to, uint256 amount); // When Token mine 
+    event TokensBurned(address indexed from, uint256 amount); // When Token burn
+    // event MaxSupplyUpdated(uint256 newMaxSupply); // Max 
 
     // CONSTRUCTOR
     constructor(
